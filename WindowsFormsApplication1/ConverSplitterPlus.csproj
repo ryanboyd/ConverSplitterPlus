@@ -114,8 +114,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="1494705113_media-repeat-alt.ico" />
-    <Content Include="context.ico" />
     <Content Include="converse.ico" />
     <None Include="Resources\conversation_painting.JPG" />
     <None Include="Resources\converse.ico" />

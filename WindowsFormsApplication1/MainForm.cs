@@ -9,8 +9,14 @@ using System.IO;
 using System.Text.RegularExpressions;
 
 
+
+
+
 namespace WindowsFormsApplication1
 {
+
+
+
 
     public partial class Form1 : Form
     {
@@ -38,7 +44,7 @@ namespace WindowsFormsApplication1
 
 
 
-        private void button1_Click(object sender, EventArgs e)
+        private void StartButton_Click(object sender, EventArgs e)
         {
 
             FolderBrowser.Description = "Please choose the location of your INPUT .txt files that you want to split";
@@ -60,13 +66,80 @@ namespace WindowsFormsApplication1
                     ScanSubfolderCheckbox.Enabled = false;
                     EncodingDropdown.Enabled = false;
                     SpeakersMultipleLinesCheckbox.Enabled = false;
+                    DetectSpeakersButton.Enabled = false;
                     BgWorker.RunWorkerAsync(new string[] {TextFileFolder, OutputFileLocation});
                 }
             } 
 
         }
 
-        
+
+
+
+        private void DetectSpeakersButton_Click(object sender, EventArgs e)
+        {
+
+            string DelimiterString = ":";
+            string MaxTagLengthString = "20";
+            int MaxTagLengthInt = 20;
+
+            //get the speaker delimiter here
+            if (ShowInputDialog(ref DelimiterString, "Speaker Tag Delimiter:") == DialogResult.OK)
+            {
+
+
+
+                if (ShowInputDialog(ref MaxTagLengthString, "Maximum tag length to consider:") == DialogResult.OK)
+                {
+                    bool isNumeric = int.TryParse(MaxTagLengthString, out MaxTagLengthInt);
+
+                    if (isNumeric)
+                    {
+
+
+
+                        FolderBrowser.Description = "Please choose the location of your INPUT .txt files. These are the files in which you want to detect all of the speakers.";
+                        FolderBrowser.ShowDialog();
+                        string TextFileFolder = FolderBrowser.SelectedPath.ToString();
+
+                        if (TextFileFolder != "")
+                        {
+
+
+
+
+                            if (DelimiterString != "")
+                            {
+                                StartButton.Enabled = false;
+                                SpeakerListTextBox.Enabled = false;
+                                ScanSubfolderCheckbox.Enabled = false;
+                                EncodingDropdown.Enabled = false;
+                                SpeakersMultipleLinesCheckbox.Enabled = false;
+                                DetectSpeakersButton.Enabled = false;
+                                DetectSpeakersBGWorker.RunWorkerAsync(new string[] { TextFileFolder, MaxTagLengthString, DelimiterString});
+                            }
+                        }
+
+
+
+                    }
+                    else
+                    {
+                        MessageBox.Show("Your maximum tag length to consider must be a whole number.\r\nThis number will be used to make sure that only relatively short strings\r\nare considered as possibly \"real\" speaker tags.");
+                    }
+
+                }
+
+                    
+
+
+
+
+                
+            }
+
+
+        }
 
 
 
@@ -262,11 +335,211 @@ namespace WindowsFormsApplication1
             ScanSubfolderCheckbox.Enabled = true;
             EncodingDropdown.Enabled = true;
             SpeakersMultipleLinesCheckbox.Enabled = true;
+            DetectSpeakersButton.Enabled = true;
             FilenameLabel.Text = "Finished!";
             MessageBox.Show("ConverSplitterPlus has finished analyzing your texts.", "Analysis Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-       
+
+
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+        private void DetectSpeakersBGWorker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            //set up our sentence boundary detection
+            Regex NewlineClean = new Regex(@"[\r\n]+", RegexOptions.Compiled);
+
+            //selects the text encoding based on user selection
+            Encoding SelectedEncoding = null;
+
+            this.Invoke((MethodInvoker)delegate ()
+            {
+                SelectedEncoding = Encoding.GetEncoding(EncodingDropdown.SelectedItem.ToString());
+
+            });
+
+
+
+
+            //make sure that we convert our max length to an integer
+
+
+
+
+            //get the list of files
+            var SearchDepth = SearchOption.TopDirectoryOnly;
+            if (ScanSubfolderCheckbox.Checked)
+            {
+                SearchDepth = SearchOption.AllDirectories;
+            }
+            var files = Directory.EnumerateFiles(((string[])e.Argument)[0], "*.txt", SearchDepth);
+
+
+            //pull out the arguments and put them into more accessible variable names
+            int MaxTagLength = int.Parse(((string[])e.Argument)[1]);
+            string DelimiterString = ((string[])e.Argument)[2];
+            int DelimiterLength = DelimiterString.Length;
+
+            HashSet<string> SpeakerList = new HashSet<string>();
+
+
+            try
+            {
+
+                foreach (string fileName in files)
+                {
+
+
+                    //set up our variables to report
+                    string Filename_Clean = Path.GetFileName(fileName);
+
+                    //report what we're working on
+                    FilenameLabel.Invoke((MethodInvoker)delegate
+                    {
+                        FilenameLabel.Text = "Analyzing: " + Filename_Clean;
+                    });
+
+
+                    //do stuff here
+                    string[] readText_Lines = NewlineClean.Split(File.ReadAllText(fileName, SelectedEncoding));
+                    int NumberOfLines = readText_Lines.Length;
+
+
+                    //loop through all of the lines in each text
+                    for (int i = 0; i < NumberOfLines; i++)
+                    {
+
+                        string CurrentLine = readText_Lines[i].Trim();
+
+                        int IndexOfDelimiter = CurrentLine.IndexOf(DelimiterString);
+
+                        if (IndexOfDelimiter > -1)
+                        {
+                            string SpeakerTag = CurrentLine.Substring(0, IndexOfDelimiter + DelimiterLength).Trim();
+
+                            if ((SpeakerTag.Length <= MaxTagLength) && !SpeakerList.Contains(SpeakerTag))
+                            {
+                                SpeakerList.Add(SpeakerTag);
+                            }
+
+                        }
+                        
+
+                        //end of for loop through each line
+                    }
+
+
+
+                    
+
+                    //end of for loop through each file
+                }
+
+
+
+                //end of try block
+            }
+            catch
+            {
+                MessageBox.Show("ConverSplitterPlus encountered an issue while opening / scanning your files.\r\n?Are your text files open in another program?");
+            }
+
+            e.Result = SpeakerList;
+
+        }
+
+        private void DetectSpeakersBGWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+
+            SpeakerListTextBox.Text = string.Join("\r\n", e.Result as HashSet<string>);
+
+            StartButton.Enabled = true;
+            SpeakerListTextBox.Enabled = true;
+            ScanSubfolderCheckbox.Enabled = true;
+            EncodingDropdown.Enabled = true;
+            SpeakersMultipleLinesCheckbox.Enabled = true;
+            DetectSpeakersButton.Enabled = true;
+            FilenameLabel.Text = "Finished!";
+            MessageBox.Show("ConverSplitterPlus has finished analyzing your texts.", "Analysis Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        //borrowed from here:
+        //https://stackoverflow.com/a/17546909
+        private static DialogResult ShowInputDialog(ref string input, string DialogName)
+        {
+            System.Drawing.Size size = new System.Drawing.Size(300, 70);
+            Form inputBox = new Form();
+
+            inputBox.StartPosition = FormStartPosition.CenterParent;
+
+            inputBox.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
+            inputBox.ClientSize = size;
+            inputBox.Text = DialogName;
+
+            System.Windows.Forms.TextBox textBox = new TextBox();
+            textBox.Size = new System.Drawing.Size(size.Width - 10, 23);
+            textBox.Location = new System.Drawing.Point(5, 5);
+            textBox.Text = input;
+            inputBox.Controls.Add(textBox);
+
+            Button okButton = new Button();
+            okButton.DialogResult = System.Windows.Forms.DialogResult.OK;
+            okButton.Name = "okButton";
+            okButton.Size = new System.Drawing.Size(75, 23);
+            okButton.Text = "&OK";
+            okButton.Location = new System.Drawing.Point(size.Width - 80 - 80, 39);
+            inputBox.Controls.Add(okButton);
+
+            Button cancelButton = new Button();
+            cancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            cancelButton.Name = "cancelButton";
+            cancelButton.Size = new System.Drawing.Size(75, 23);
+            cancelButton.Text = "&Cancel";
+            cancelButton.Location = new System.Drawing.Point(size.Width - 80, 39);
+            inputBox.Controls.Add(cancelButton);
+
+            inputBox.AcceptButton = okButton;
+            inputBox.CancelButton = cancelButton;
+
+            DialogResult result = inputBox.ShowDialog();
+            input = textBox.Text;
+            return result;
+        }
+
+
+        
+
+
+
+
+
+
+
 
     }
     

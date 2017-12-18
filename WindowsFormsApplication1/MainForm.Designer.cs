@@ -41,6 +41,7 @@
             this.SpeakersMultipleLinesCheckbox = new System.Windows.Forms.CheckBox();
             this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.DetectSpeakersButton = new System.Windows.Forms.Button();
+            this.DetectSpeakersBGWorker = new System.ComponentModel.BackgroundWorker();
             this.SuspendLayout();
             // 
             // BgWorker
@@ -68,7 +69,7 @@
             this.StartButton.TabIndex = 3;
             this.StartButton.Text = "Start";
             this.StartButton.UseVisualStyleBackColor = true;
-            this.StartButton.Click += new System.EventHandler(this.button1_Click);
+            this.StartButton.Click += new System.EventHandler(this.StartButton_Click);
             // 
             // FolderBrowser
             // 
@@ -112,7 +113,7 @@
             this.EncodingDropdown.FormattingEnabled = true;
             this.EncodingDropdown.Location = new System.Drawing.Point(33, 343);
             this.EncodingDropdown.Name = "EncodingDropdown";
-            this.EncodingDropdown.Size = new System.Drawing.Size(180, 21);
+            this.EncodingDropdown.Size = new System.Drawing.Size(267, 21);
             this.EncodingDropdown.TabIndex = 9;
             // 
             // label4
@@ -144,7 +145,6 @@
             // 
             // DetectSpeakersButton
             // 
-            this.DetectSpeakersButton.Enabled = false;
             this.DetectSpeakersButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.DetectSpeakersButton.Location = new System.Drawing.Point(193, 381);
             this.DetectSpeakersButton.Name = "DetectSpeakersButton";
@@ -152,6 +152,12 @@
             this.DetectSpeakersButton.TabIndex = 12;
             this.DetectSpeakersButton.Text = "Detect Speakers";
             this.DetectSpeakersButton.UseVisualStyleBackColor = true;
+            this.DetectSpeakersButton.Click += new System.EventHandler(this.DetectSpeakersButton_Click);
+            // 
+            // DetectSpeakersBGWorker
+            // 
+            this.DetectSpeakersBGWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.DetectSpeakersBGWorker_DoWork);
+            this.DetectSpeakersBGWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.DetectSpeakersBGWorker_RunWorkerCompleted);
             // 
             // Form1
             // 
@@ -175,7 +181,7 @@
             this.MinimumSize = new System.Drawing.Size(400, 550);
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "ConverSplitterPlus!";
+            this.Text = "ConverSplitter Plus!";
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -194,6 +200,7 @@
         private System.Windows.Forms.CheckBox SpeakersMultipleLinesCheckbox;
         private System.Windows.Forms.SaveFileDialog saveFileDialog;
         private System.Windows.Forms.Button DetectSpeakersButton;
+        private System.ComponentModel.BackgroundWorker DetectSpeakersBGWorker;
     }
 }
 
