@@ -48,19 +48,18 @@ namespace WindowsFormsApplication1
         {
 
             FolderBrowser.Description = "Please choose the location of your INPUT .txt files that you want to split";
-            FolderBrowser.ShowDialog();
-            string TextFileFolder = FolderBrowser.SelectedPath.ToString();
 
-            if (TextFileFolder != "")
-            {
+            if (FolderBrowser.ShowDialog() != DialogResult.Cancel) {
 
+                string TextFileFolder = FolderBrowser.SelectedPath.ToString();
+                           
                 FolderBrowser.Description = "Please choose the OUTPUT location for your files";
 
-                FolderBrowser.ShowDialog();
-                string OutputFileLocation = FolderBrowser.SelectedPath.ToString();
+                if (FolderBrowser.ShowDialog() != DialogResult.Cancel)
+                {
 
-
-                if (OutputFileLocation != "") { 
+                    string OutputFileLocation = FolderBrowser.SelectedPath.ToString();
+                
                     StartButton.Enabled = false;
                     SpeakerListTextBox.Enabled = false;
                     ScanSubfolderCheckbox.Enabled = false;
@@ -76,10 +75,14 @@ namespace WindowsFormsApplication1
 
 
 
+
+
+
+
         private void DetectSpeakersButton_Click(object sender, EventArgs e)
         {
 
-            string DelimiterString = ":";
+            string DelimiterString = ": ";
             string MaxTagLengthString = "20";
             int MaxTagLengthInt = 20;
 
@@ -427,7 +430,7 @@ namespace WindowsFormsApplication1
 
                         if (IndexOfDelimiter > -1)
                         {
-                            string SpeakerTag = CurrentLine.Substring(0, IndexOfDelimiter + DelimiterLength).Trim();
+                            string SpeakerTag = CurrentLine.Substring(0, IndexOfDelimiter + DelimiterLength);
 
                             if ((SpeakerTag.Length <= MaxTagLength) && !SpeakerList.Contains(SpeakerTag))
                             {
