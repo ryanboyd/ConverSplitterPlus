@@ -277,9 +277,9 @@ namespace WindowsFormsApplication1
                             }
 
 
-                            //what we will do if no speaker was found
-                            if (FoundSpeaker == false)
-                            {
+                    //what we will do if no speaker was found
+                    if ((FoundSpeaker == false) && (PreviousSpeaker != ""))
+                    {
                                 if (SpeakerMultipleLines)
                                 {
                                     Text_Split[PreviousSpeaker] += CurrentLine.Trim() + "\r\n";

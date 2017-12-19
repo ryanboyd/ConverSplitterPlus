@@ -87,15 +87,18 @@
             // 
             // SpeakerListTextBox
             // 
+            this.SpeakerListTextBox.AcceptsReturn = true;
+            this.SpeakerListTextBox.AcceptsTab = true;
             this.SpeakerListTextBox.Font = new System.Drawing.Font("Courier New", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.SpeakerListTextBox.Location = new System.Drawing.Point(33, 37);
             this.SpeakerListTextBox.MaxLength = 2147483647;
             this.SpeakerListTextBox.Multiline = true;
             this.SpeakerListTextBox.Name = "SpeakerListTextBox";
-            this.SpeakerListTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.SpeakerListTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.SpeakerListTextBox.Size = new System.Drawing.Size(319, 265);
             this.SpeakerListTextBox.TabIndex = 7;
             this.SpeakerListTextBox.Text = "Participant 1:\r\nParticipant 2:";
+            this.SpeakerListTextBox.WordWrap = false;
             // 
             // label3
             // 
