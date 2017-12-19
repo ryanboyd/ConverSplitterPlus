@@ -193,6 +193,7 @@ namespace WindowsFormsApplication1
 
             string outputFolder = System.IO.Path.Combine(((string[])e.Argument)[1], "ConverSplitter_Output");
 
+
             try
             {
                 System.IO.Directory.CreateDirectory(outputFolder);
@@ -209,6 +210,25 @@ namespace WindowsFormsApplication1
             
                foreach (string fileName in files)
                 {
+
+
+                    string outputFolder_Subs = "";
+
+                    if (SearchDepth == SearchOption.AllDirectories)
+                    {
+                        string subfolder = Path.GetDirectoryName(fileName).Replace(((string[])e.Argument)[0], "");
+                        outputFolder_Subs = System.IO.Path.Combine(outputFolder, subfolder.Trim(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+                        try
+                        {
+                            System.IO.Directory.CreateDirectory(outputFolder_Subs);
+                        }
+                        catch
+                        {
+                            MessageBox.Show("ConverSplitterPlus could not create a subdirectory in your output folder.\r\nIs your output directory write protected?");
+                            e.Cancel = true;
+                        }
+
+                    }
 
 
 
@@ -304,7 +324,15 @@ namespace WindowsFormsApplication1
                         foreach (var c in Path.GetInvalidFileNameChars()) { OutputFilename = OutputFilename.Replace(c, '_'); }
 
                         //set the full path of our output
-                        OutputFilename = System.IO.Path.Combine(outputFolder, OutputFilename);
+                        if (SearchDepth == SearchOption.AllDirectories)
+                        {
+                            OutputFilename = System.IO.Path.Combine(outputFolder_Subs, OutputFilename);
+                        }
+                        else
+                        {
+                            OutputFilename = System.IO.Path.Combine(outputFolder, OutputFilename);
+                        }
+                        
 
                         // write the output
                         using (StreamWriter outputFile = new StreamWriter(new FileStream(OutputFilename, FileMode.Create, FileAccess.Write), SelectedEncoding))
