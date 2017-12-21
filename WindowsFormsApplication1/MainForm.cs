@@ -27,13 +27,26 @@ namespace WindowsFormsApplication1
         {
 
             InitializeComponent();
-            
 
-            foreach(var encoding in Encoding.GetEncodings())
+
+
+
+            foreach (var encoding in Encoding.GetEncodings())
             {
                 EncodingDropdown.Items.Add(encoding.Name);
             }
             EncodingDropdown.SelectedIndex = EncodingDropdown.FindStringExact(Encoding.Default.BodyName);
+
+
+            /*
+               RegExTooltip.SetToolTip(this.RegexTextBox, "Regular Expressions (RegExes) are a way to identify patterns in text." + "\r\n" +
+                                                       @"For example, \d will find any number. RegExes can be somewhat tricky" + "\r\n" + 
+                                                       "to learn, but are extremely powerful. Here, you can use RegExes to remove" + "\r\n" +
+                                                       "patterns from your texts, such as timestamps, so that your speaker tags" + "\r\n" +
+                                                       "are easier to capture or identify in your texts." + "\r\n" + "\r\n" +
+                                                       @"Check out https://www.regular-expressions.info/ to get started.");
+                                                       */
+
 
 
         }
@@ -47,28 +60,36 @@ namespace WindowsFormsApplication1
         private void StartButton_Click(object sender, EventArgs e)
         {
 
-            FolderBrowser.Description = "Please choose the location of your INPUT .txt files that you want to split";
 
-            if (FolderBrowser.ShowDialog() != DialogResult.Cancel) {
+            if (ValidateRegex(RegexTextBox.Text))
+            {
 
-                string TextFileFolder = FolderBrowser.SelectedPath.ToString();
-                           
-                FolderBrowser.Description = "Please choose the OUTPUT location for your files";
+                FolderBrowser.Description = "Please choose the location of your INPUT .txt files that you want to split";
 
                 if (FolderBrowser.ShowDialog() != DialogResult.Cancel)
                 {
 
-                    string OutputFileLocation = FolderBrowser.SelectedPath.ToString();
-                
-                    StartButton.Enabled = false;
-                    SpeakerListTextBox.Enabled = false;
-                    ScanSubfolderCheckbox.Enabled = false;
-                    EncodingDropdown.Enabled = false;
-                    SpeakersMultipleLinesCheckbox.Enabled = false;
-                    DetectSpeakersButton.Enabled = false;
-                    BgWorker.RunWorkerAsync(new string[] {TextFileFolder, OutputFileLocation});
+                    string TextFileFolder = FolderBrowser.SelectedPath.ToString();
+
+                    FolderBrowser.Description = "Please choose the OUTPUT location for your files";
+
+                    if (FolderBrowser.ShowDialog() != DialogResult.Cancel)
+                    {
+
+                        string OutputFileLocation = FolderBrowser.SelectedPath.ToString();
+
+                        StartButton.Enabled = false;
+                        SpeakerListTextBox.Enabled = false;
+                        ScanSubfolderCheckbox.Enabled = false;
+                        EncodingDropdown.Enabled = false;
+                        SpeakersMultipleLinesCheckbox.Enabled = false;
+                        DetectSpeakersButton.Enabled = false;
+                        RegexTextBox.Enabled = false;
+                        BgWorker.RunWorkerAsync(new string[] { TextFileFolder, OutputFileLocation });
+                    }
                 }
-            } 
+            }
+
 
         }
 
@@ -82,63 +103,64 @@ namespace WindowsFormsApplication1
         private void DetectSpeakersButton_Click(object sender, EventArgs e)
         {
 
-            string DelimiterString = ": ";
-            string MaxTagLengthString = "20";
-            int MaxTagLengthInt = 20;
-
-            //get the speaker delimiter here
-            if (ShowInputDialog(ref DelimiterString, "Speaker Tag Delimiter:") == DialogResult.OK)
+            if (ValidateRegex(RegexTextBox.Text))
             {
+                string DelimiterString = ": ";
+                string MaxTagLengthString = "20";
+                int MaxTagLengthInt = 20;
 
-
-
-                if (ShowInputDialog(ref MaxTagLengthString, "Maximum tag length to consider:") == DialogResult.OK)
+                //get the speaker delimiter here
+                if (ShowInputDialog(ref DelimiterString, "Speaker Tag Delimiter:") == DialogResult.OK)
                 {
-                    bool isNumeric = int.TryParse(MaxTagLengthString, out MaxTagLengthInt);
 
-                    if (isNumeric)
+
+
+                    if (ShowInputDialog(ref MaxTagLengthString, "Maximum tag length to consider:") == DialogResult.OK)
                     {
+                        bool isNumeric = int.TryParse(MaxTagLengthString, out MaxTagLengthInt);
 
-
-
-                        FolderBrowser.Description = "Please choose the location of your INPUT .txt files. These are the files in which you want to detect all of the speakers.";
-                        FolderBrowser.ShowDialog();
-                        string TextFileFolder = FolderBrowser.SelectedPath.ToString();
-
-                        if (TextFileFolder != "")
+                        if (isNumeric)
                         {
 
 
 
+                            FolderBrowser.Description = "Please choose the location of your INPUT .txt files. These are the files in which you want to detect all of the speakers.";
+                            FolderBrowser.ShowDialog();
+                            string TextFileFolder = FolderBrowser.SelectedPath.ToString();
 
-                            if (DelimiterString != "")
+                            if (TextFileFolder != "")
                             {
-                                StartButton.Enabled = false;
-                                SpeakerListTextBox.Enabled = false;
-                                ScanSubfolderCheckbox.Enabled = false;
-                                EncodingDropdown.Enabled = false;
-                                SpeakersMultipleLinesCheckbox.Enabled = false;
-                                DetectSpeakersButton.Enabled = false;
-                                DetectSpeakersBGWorker.RunWorkerAsync(new string[] { TextFileFolder, MaxTagLengthString, DelimiterString});
+
+
+
+
+                                if (DelimiterString != "")
+                                {
+                                    StartButton.Enabled = false;
+                                    SpeakerListTextBox.Enabled = false;
+                                    ScanSubfolderCheckbox.Enabled = false;
+                                    EncodingDropdown.Enabled = false;
+                                    SpeakersMultipleLinesCheckbox.Enabled = false;
+                                    DetectSpeakersButton.Enabled = false;
+                                    RegexTextBox.Enabled = false;
+                                    DetectSpeakersBGWorker.RunWorkerAsync(new string[] { TextFileFolder, MaxTagLengthString, DelimiterString });
+                                }
                             }
+
+
+
+                        }
+                        else
+                        {
+                            MessageBox.Show("Your maximum tag length to consider must be a whole number.\r\nThis number will be used to make sure that only relatively short strings\r\nare considered as possibly \"real\" speaker tags.");
                         }
 
+                    }
 
 
-                    }
-                    else
-                    {
-                        MessageBox.Show("Your maximum tag length to consider must be a whole number.\r\nThis number will be used to make sure that only relatively short strings\r\nare considered as possibly \"real\" speaker tags.");
-                    }
 
                 }
 
-                    
-
-
-
-
-                
             }
 
 
@@ -150,21 +172,30 @@ namespace WindowsFormsApplication1
         private void BgWorker_DoWork(object sender, DoWorkEventArgs e)
         {
 
-            
+
             //set up our sentence boundary detection
             Regex NewlineClean = new Regex(@"[\r\n]+", RegexOptions.Compiled);
 
             //selects the text encoding based on user selection
             Encoding SelectedEncoding = null;
             bool SpeakerMultipleLines = false;
+            bool UsingRegex = false;
+            string RegExString = "";
 
             this.Invoke((MethodInvoker)delegate ()
             {
                 SelectedEncoding = Encoding.GetEncoding(EncodingDropdown.SelectedItem.ToString());
                 SpeakerMultipleLines = SpeakersMultipleLinesCheckbox.Checked;
+                RegExString = RegexTextBox.Text;
 
             });
 
+
+            Regex CompiledRegex = new Regex(RegExString, RegexOptions.Compiled);
+
+            if (!string.IsNullOrEmpty(RegExString)){
+                UsingRegex = true;
+            }
 
 
 
@@ -189,7 +220,7 @@ namespace WindowsFormsApplication1
             {
                 SearchDepth = SearchOption.AllDirectories;
             }
-            var files = Directory.EnumerateFiles( ((string[])e.Argument)[0], "*.txt", SearchDepth);
+            var files = Directory.EnumerateFiles(((string[])e.Argument)[0], "*.txt", SearchDepth);
 
             string outputFolder = System.IO.Path.Combine(((string[])e.Argument)[1], "ConverSplitter_Output");
 
@@ -206,9 +237,10 @@ namespace WindowsFormsApplication1
 
 
 
-            try { 
-            
-               foreach (string fileName in files)
+            try
+            {
+
+                foreach (string fileName in files)
                 {
 
 
@@ -254,62 +286,74 @@ namespace WindowsFormsApplication1
                     //loop through all of the lines in each text
 
                     string PreviousSpeaker = "";
-                    
-                    for (int i = 0; i < NumberOfLines; i++){
 
-                            string CurrentLine = readText_Lines[i].Trim();
-
-                            //if the line is empty, move along... move along
-                            if (CurrentLine.Length == 0)
-                            {
-                                continue;
-                            }
-
-                            bool FoundSpeaker = false;
-
-                            //loop through each speaker in list to see if the line starts with their name
-                            for (int j =0; j < SpeakerListLength; j++)
-                            {
-
-                                // here's what we do if we find a match
-                                if (CurrentLine.StartsWith(SpeakerList[j]))
-                                {
-
-                                    FoundSpeaker = true;
-                                    PreviousSpeaker = SpeakerList[j];
-
-                                    //clean up the line to remove the speaker tag from the beginning
-                                    int Place = CurrentLine.IndexOf(SpeakerList[j]);
-                                    CurrentLine = CurrentLine.Remove(Place, SpeakerList[j].Length).Insert(Place, "").Trim() + "\r\n";
-
-                                    if (Text_Split.ContainsKey(SpeakerList[j])){
-                                       
-                                        Text_Split[SpeakerList[j]] += CurrentLine;
-                                    }
-
-                                    else
-                                    {
-                                        Text_Split.Add(SpeakerList[j], CurrentLine);
-                                    }
-
-                                    //break to the next line in the text
-                                    break;
-                                }
-
-
-                            }
-
-
-                    //what we will do if no speaker was found
-                    if ((FoundSpeaker == false) && (PreviousSpeaker != ""))
+                    for (int i = 0; i < NumberOfLines; i++)
                     {
-                                if (SpeakerMultipleLines)
+
+                        string CurrentLine = readText_Lines[i];
+                            
+                        if (UsingRegex)
+                        {
+                            CurrentLine = CompiledRegex.Replace(CurrentLine, "").Trim();
+                        }
+                        else
+                        {
+                            CurrentLine = CurrentLine.Trim();
+                        }
+
+
+                        //if the line is empty, move along... move along
+                        if (CurrentLine.Length == 0)
+                        {
+                            continue;
+                        }
+
+                        bool FoundSpeaker = false;
+
+                        //loop through each speaker in list to see if the line starts with their name
+                        for (int j = 0; j < SpeakerListLength; j++)
+                        {
+
+                            // here's what we do if we find a match
+                            if (CurrentLine.StartsWith(SpeakerList[j]))
+                            {
+
+                                FoundSpeaker = true;
+                                PreviousSpeaker = SpeakerList[j];
+
+                                //clean up the line to remove the speaker tag from the beginning
+                                int Place = CurrentLine.IndexOf(SpeakerList[j]);
+                                CurrentLine = CurrentLine.Remove(Place, SpeakerList[j].Length).Insert(Place, "").Trim() + "\r\n";
+
+                                if (Text_Split.ContainsKey(SpeakerList[j]))
                                 {
-                                    Text_Split[PreviousSpeaker] += CurrentLine.Trim() + "\r\n";
+
+                                    Text_Split[SpeakerList[j]] += CurrentLine;
                                 }
+
+                                else
+                                {
+                                    Text_Split.Add(SpeakerList[j], CurrentLine);
+                                }
+
+                                //break to the next line in the text
+                                break;
                             }
 
-                    //end of for loop through each line
+
+                        }
+
+
+                        //what we will do if no speaker was found
+                        if ((FoundSpeaker == false) && (PreviousSpeaker != ""))
+                        {
+                            if (SpeakerMultipleLines)
+                            {
+                                Text_Split[PreviousSpeaker] += CurrentLine.Trim() + "\r\n";
+                            }
+                        }
+
+                        //end of for loop through each line
                     }
 
 
@@ -319,7 +363,7 @@ namespace WindowsFormsApplication1
                     {
 
                         string OutputFilename = Path.GetFileNameWithoutExtension(fileName) + ";" + entry.Key + ".txt";
-                        
+
                         //clean up broken filenames
                         foreach (var c in Path.GetInvalidFileNameChars()) { OutputFilename = OutputFilename.Replace(c, '_'); }
 
@@ -332,7 +376,7 @@ namespace WindowsFormsApplication1
                         {
                             OutputFilename = System.IO.Path.Combine(outputFolder, OutputFilename);
                         }
-                        
+
 
                         // write the output
                         using (StreamWriter outputFile = new StreamWriter(new FileStream(OutputFilename, FileMode.Create, FileAccess.Write), SelectedEncoding))
@@ -346,8 +390,8 @@ namespace WindowsFormsApplication1
                 }
 
 
-          
-            //end of try block
+
+                //end of try block
             }
             catch
             {
@@ -356,7 +400,7 @@ namespace WindowsFormsApplication1
 
 
 
-            
+
         }
 
         private void BgWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -367,6 +411,7 @@ namespace WindowsFormsApplication1
             EncodingDropdown.Enabled = true;
             SpeakersMultipleLinesCheckbox.Enabled = true;
             DetectSpeakersButton.Enabled = true;
+            RegexTextBox.Enabled = true;
             FilenameLabel.Text = "Finished!";
             MessageBox.Show("ConverSplitterPlus has finished analyzing your texts.", "Analysis Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
@@ -382,7 +427,7 @@ namespace WindowsFormsApplication1
 
 
 
-        
+
 
 
 
@@ -394,12 +439,23 @@ namespace WindowsFormsApplication1
 
             //selects the text encoding based on user selection
             Encoding SelectedEncoding = null;
+            bool UsingRegex = false;
+            string RegExString = "";
+
 
             this.Invoke((MethodInvoker)delegate ()
             {
                 SelectedEncoding = Encoding.GetEncoding(EncodingDropdown.SelectedItem.ToString());
+                RegExString = RegexTextBox.Text;
 
             });
+
+            Regex CompiledRegex = new Regex(RegExString, RegexOptions.Compiled);
+
+            if (!string.IsNullOrEmpty(RegExString))
+            {
+                UsingRegex = true;
+            }
 
 
 
@@ -452,7 +508,17 @@ namespace WindowsFormsApplication1
                     for (int i = 0; i < NumberOfLines; i++)
                     {
 
-                        string CurrentLine = readText_Lines[i].Trim();
+                        string CurrentLine = readText_Lines[i];
+
+                        if (UsingRegex)
+                        {
+                            CurrentLine = CompiledRegex.Replace(CurrentLine, "").Trim();
+                        }
+                        else
+                        {
+                            CurrentLine = CurrentLine.Trim();
+                        }
+
 
                         int IndexOfDelimiter = CurrentLine.IndexOf(DelimiterString);
 
@@ -466,14 +532,14 @@ namespace WindowsFormsApplication1
                             }
 
                         }
-                        
+
 
                         //end of for loop through each line
                     }
 
 
 
-                    
+
 
                     //end of for loop through each file
                 }
@@ -502,8 +568,9 @@ namespace WindowsFormsApplication1
             EncodingDropdown.Enabled = true;
             SpeakersMultipleLinesCheckbox.Enabled = true;
             DetectSpeakersButton.Enabled = true;
+            RegexTextBox.Enabled = true;
             FilenameLabel.Text = "Finished!";
-            MessageBox.Show("ConverSplitterPlus has finished analyzing your texts.", "Analysis Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("ConverSplitterPlus has finished detecting speakers.", "Analysis Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
 
@@ -563,17 +630,28 @@ namespace WindowsFormsApplication1
         }
 
 
-        
+
+        private static bool ValidateRegex(string RegexInBox)
+        {
+
+            bool IsRegexValid = true;
+
+            try
+            {
+                Regex NewlineClean = new Regex(RegexInBox, RegexOptions.Compiled);
+            }
+            catch
+            {
+                IsRegexValid = false;
+                MessageBox.Show("Your regular expression (RegEx) does not appear to be" + "\r\n" +
+                                "a valid construction. Please review and revise your entry.", "RegEx Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
 
 
-
-
-
-
+            return IsRegexValid;
+        }
 
 
     }
-    
-
 
 }
